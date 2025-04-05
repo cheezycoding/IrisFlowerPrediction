@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Species Predictor</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 600px; margin: auto; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="number"] { width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #f9f9f9; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Iris Species Predictor</h1>
+    <form id="prediction-form">
+        <div>
+            <label for="sepal_length">Sepal Length (cm):</label>
+            <input type="number" id="sepal_length" name="sepal_length" step="0.1" required>
+        </div>
+        <div>
+            <label for="sepal_width">Sepal Width (cm):</label>
+            <input type="number" id="sepal_width" name="sepal_width" step="0.1" required>
+        </div>
+        <div>
+            <label for="petal_length">Petal Length (cm):</label>
+            <input type="number" id="petal_length" name="petal_length" step="0.1" required>
+        </div>
+        <div>
+            <label for="petal_width">Petal Width (cm):</label>
+            <input type="number" id="petal_width" name="petal_width" step="0.1" required>
+        </div>
+        <button type="submit">Predict Species</button>
+    </form>
+
+    <div id="result">
+        <!-- Prediction result will be shown here -->
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(form);
+            const data = {
+                sepal_length: parseFloat(formData.get('sepal_length')),
+                sepal_width: parseFloat(formData.get('sepal_width')),
+                petal_length: parseFloat(formData.get('petal_length')),
+                petal_width: parseFloat(formData.get('petal_width'))
+            };
+
+            resultDiv.innerHTML = 'Predicting...'; // Show loading message
+
+            try {
+                const response = await fetch('/predict', { // Send request to our /predict endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data), // Convert JS object to JSON string
+                });
+
+                if (!response.ok) {
+                    // Handle HTTP errors (like 500 Internal Server Error)
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json(); // Parse the JSON response from the server
+                // Display the prediction
+                resultDiv.innerHTML = `Predicted Species: <strong>${result.predicted_species}</strong>`;
+
+            } catch (error) {
+                console.error('Error:', error);
+                // Display error message
+                resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>
